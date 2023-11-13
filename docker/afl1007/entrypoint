@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#
+# entrypoint <binary> <args> <mintime> <maxtime>
+#
+
+if [ ! -d "/in" ]; then
+    echo "Input directory not found!"
+    exit 1
+fi
+
+if [ ! -d "/out" ]; then
+    echo "Output directory not found!"
+    exit 1
+fi
+
+cp -r /in /tmp/in
+
+timeout $4 /aflgo/afl-2.57b/afl-fuzz -i /tmp/in -o /tmp/out -m none -z exp -c $3 -- $1 $2
+
+/bin/postprocess
