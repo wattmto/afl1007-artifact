@@ -55,7 +55,7 @@ WORKDIR /aflgo
 RUN git reset --hard fa125da5d70621daf7141c6279877c97708c8c1f && \
     git clean -f -d
 
-COPY diff.patch /aflgo/diff.patch
+COPY docker/afl1007/diff.patch /aflgo/diff.patch
 
 RUN git apply diff.patch
 
@@ -94,8 +94,8 @@ RUN CXX=$(which clang++) && \
 
 WORKDIR /
 
-COPY entrypoint /bin/entrypoint
-COPY postprocess /bin/postprocess
+COPY docker/afl1007/entrypoint /bin/entrypoint
+COPY docker/afl1007/postprocess /bin/postprocess
 
 RUN chmod +x /bin/entrypoint && \
     chmod +x /bin/postprocess

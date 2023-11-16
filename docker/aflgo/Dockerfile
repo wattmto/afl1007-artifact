@@ -90,8 +90,8 @@ RUN CXX=$(which clang++) && \
 
 WORKDIR /
 
-COPY entrypoint /bin/entrypoint
-COPY postprocess /bin/postprocess
+COPY docker/aflgo/entrypoint /bin/entrypoint
+COPY docker/aflgo/postprocess /bin/postprocess
 
 RUN chmod +x /bin/entrypoint && \
     chmod +x /bin/postprocess
