@@ -59,10 +59,13 @@ COPY docker/afl1007/diff.patch /aflgo/diff.patch
 
 RUN git apply diff.patch
 
-RUN ln -s /usr/bin/clang++-11 /usr/bin/clang++ && \
+RUN ln -s /usr/bin/llvm-ar-11 /usr/bin/llvm-ar && \
+    ln -s /usr/bin/llvm-as-11 /usr/bin/llvm-as && \
+    ln -s /usr/bin/clang++-11 /usr/bin/clang++ && \
     ln -s /usr/bin/clang-11 /usr/bin/clang && \
     ln -s /usr/bin/llvm-config-11 /usr/bin/llvm-config && \
-    ln -s /usr/bin/opt-11 /usr/bin/opt
+    ln -s /usr/bin/opt-11 /usr/bin/opt && \
+    ln -s /usr/bin/llvm-ranlib-11 /usr/bin/llvm-ranlib
 
 WORKDIR /aflgo/afl-2.57b
 RUN CXX=$(which clang++) && \
