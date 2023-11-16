@@ -1,24 +1,16 @@
 FROM afl1007:latest
 
-RUN python3 -m pip install networkx \
-    pydot \
-    pydotplus
+ARG CVE=2017-5969
 
-RUN git clone https://gitlab.gnome.org/GNOME/libxml2 && \
-    cd /libxml2 && \
-    git checkout ef709ce2
+ADD https://github.com/GNOME/libxml2/archive/refs/tags/v2.9.4.zip /
+
+RUN unzip v2.9.4.zip && \
+    mv /libxml2-2.9.4 /libxml2 && \
+    rm v2.9.4.zip
 
 RUN mkdir /inst-assist
 
-RUN wget -O /inst-assist/showlinenum.awk https://raw.githubusercontent.com/jay/showlinenum/develop/showlinenum.awk && \
-    chmod +x /inst-assist/showlinenum.awk
-
-RUN cd /libxml2 && \
-    git diff -U0 HEAD^ HEAD > /inst-assist/commit.diff && \
-    cat /inst-assist/commit.diff | \
-        /inst-assist/showlinenum.awk show_header=0 path=1 | \
-        grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | \
-        cut -d+ -f1 | rev | cut -c2- | rev > /inst-assist/BBtargets.txt
+COPY target/libxml2/$CVE /inst-assist/BBtargets.txt
 
 RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXX=/aflgo/instrument/aflgo-clang++ && \
@@ -31,7 +23,7 @@ RUN export CC=/aflgo/instrument/aflgo-clang && \
     LDFLAGS="-lpthread" \
     cd /libxml2 && \
     ./autogen.sh && \
-    ./configure --disable-shared && \
+    ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
     make clean && \
     make xmllint
 
@@ -50,7 +42,7 @@ RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
     cd /libxml2 && \
     make clean && \
-    ./configure --disable-shared && \
+    ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
     make xmllint
 
 CMD ["/libxml2/xmllint", "--valid --recover @@", "45m", "1h"]

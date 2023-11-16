@@ -1,9 +1,7 @@
 FROM ubuntu:focal
 
-ENV DEBIAN_FRONTEND=noninteractive
 
-RUN DEBIAN_FRONTEND=noninteractive \
-    apt-get update && apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     build-essential \
     curl \
     cmake \
@@ -13,15 +11,16 @@ RUN DEBIAN_FRONTEND=noninteractive \
     lsb-release \
     make \
     sudo \
+    unzip \
     wget \
     zsh \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/keyrings/llvm-snapshot.asc > /dev/null \
-    && echo "deb [signed-by=/etc/apt/keyrings/llvm-snapshot.asc] http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-11 main" | tee /etc/apt/sources.list.d/llvm.list > /dev/null \
-    && DEBIAN_FRONTEND=noninteractive \
-    apt-get update && apt-get install -y \
+
+    curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/keyrings/llvm-snapshot.asc > /dev/null && \
+    echo "deb [signed-by=/etc/apt/keyrings/llvm-snapshot.asc] http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-11 main" | tee /etc/apt/sources.list.d/llvm.list > /dev/null && \
+    apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     clang-11 \
     clangd-11 \
     clang-format-11 \
@@ -29,8 +28,8 @@ RUN mkdir -p /etc/apt/keyrings && \
     lld-11 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN DEBIAN_FRONTEND=noninteractive \
-    apt-get update && apt-get install -y \
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     graphviz \
     python3 \
     python3-dev \
