@@ -1,3 +1,5 @@
 #!/bin/bash
 
 cp -r /tmp/out/* /out/
+
+/aflgo/afl-2.57b/afl-plot /tmp/out /out/plot
