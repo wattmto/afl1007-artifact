@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  hadolint:
+  lint:
     name: Hadolint Action
     runs-on: ubuntu-latest
 
@@ -20,3 +20,5 @@ jobs:
           dockerfile: '*Dockerfile'
           recursive: true
           ignore: DL3008,DL3013
+      - name: Shellcheck
+        uses: redhat-plumbers-in-action/differential-shellcheck@v5.0.1
