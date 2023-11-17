@@ -11,6 +11,11 @@ jobs:
     name: Hadolint Action
     runs-on: ubuntu-latest
 
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -22,3 +27,5 @@ jobs:
           ignore: DL3008,DL3013
       - name: Shellcheck
         uses: redhat-plumbers-in-action/differential-shellcheck@v5.0.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
