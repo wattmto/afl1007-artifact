@@ -1,5 +1,5 @@
-#hadolint ignore=DL3007
-FROM aflgo:latest
+ARG TAG=main
+FROM ghcr.io/wattmto/afl1007-artifact/aflgo:${TAG}
 
 ARG CVE=2017-5969
 
@@ -17,19 +17,23 @@ COPY target/libxml2/$CVE /inst-assist/BBtargets.txt
 
 WORKDIR /libxml2
 
-RUN export CC=/aflgo/instrument/aflgo-clang && \
+RUN LLVM_CONFIG=$(which llvm-config) && \
+    AR=$(which llvm-ar) && \
+    RANLIB=$(which llvm-ranlib) && \
+    AS=$(which llvm-as) && \
+    export CC=/aflgo/instrument/aflgo-clang && \
     export CXX=/aflgo/instrument/aflgo-clang++ && \
     export CFLAGS="-targets=/inst-assist/BBtargets.txt -outdir=/inst-assist -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps" && \
     export CXXFLAGS="-targets=/inst-assist/BBtargets.txt -outdir=/inst-assist -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps" && \
-    export LLVM_CONFIG=/usr/bin/llvm-config-11 && \
-    export AR=/usr/bin/llvm-ar-11 && \
-    export RANLIB=/usr/bin/llvm-ranlib-11 && \
-    export AS=/usr/bin/llvm-as-11 && \
+    export AR && \
+    export AS && \
+    export LLVM_CONFIG && \
+    export RANLIB && \
     LDFLAGS="-lpthread" \
     ./autogen.sh && \
     ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
     make clean && \
-    make xmllint
+    make -j "$(nproc)" xmllint
 
 RUN /libxml2/xmllint --valid --recover /libxml2/test/dtd3
 
@@ -46,7 +50,7 @@ RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
     make clean && \
     ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
-    make xmllint
+    make -j "$(nproc)" xmllint
 
 WORKDIR /
 
