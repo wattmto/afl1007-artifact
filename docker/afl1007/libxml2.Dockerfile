@@ -33,7 +33,7 @@ RUN LLVM_CONFIG=$(which llvm-config) && \
     ./autogen.sh && \
     ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
     make clean && \
-    make xmllint
+    make -j "$(nproc)" xmllint
 
 RUN /libxml2/xmllint --valid --recover /libxml2/test/dtd3
 
@@ -50,7 +50,7 @@ RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
     make clean && \
     ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
-    make xmllint
+    make -j "$(nproc)" xmllint
 
 WORKDIR /
 

@@ -70,7 +70,7 @@ RUN CXX=$(which clang++) && \
     export CXX && \
     export CC && \
     export LLVM_CONFIG && \
-    make clean all
+    make -j "$(nproc)" clean all
 
 WORKDIR /aflgo/instrument
 RUN CXX=$(which clang++) && \
@@ -79,7 +79,7 @@ RUN CXX=$(which clang++) && \
     export CXX && \
     export CC && \
     export LLVM_CONFIG && \
-    make clean all
+    make -j "$(nproc)" clean all
 
 WORKDIR /aflgo/distance/distance_calculator
 RUN CXX=$(which clang++) && \
@@ -89,7 +89,7 @@ RUN CXX=$(which clang++) && \
     export CC && \
     export LLVM_CONFIG && \
     cmake ./ && \
-    cmake --build ./
+    cmake --build . -j "$(nproc)"
 
 WORKDIR /
 
