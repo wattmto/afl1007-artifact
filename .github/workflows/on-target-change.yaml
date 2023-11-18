@@ -22,7 +22,7 @@ jobs:
       - id: target-matrix-load
         run: |
           MATRIX="$(cat .github/workflows/target-matrix.json)"
-          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+          echo 'matrix=${MATRIX}' >> $GITHUB_OUTPUT
       - id: build-push-target
         uses: ./.github/actions/build-push-target.yaml
         with:
