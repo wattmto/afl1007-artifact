@@ -19,6 +19,6 @@ jobs:
           MATRIX="$(cat .github/workflows/fuzzer-matrix.json)"
           echo 'matrix=${MATRIX}' >> $GITHUB_OUTPUT
       - id: build-push-fuzzer
-        uses: ./.github/actions/build-push-fuzzer.yaml
+        uses: ./.github/workflows/build-push-fuzzer.yaml
         with:
           fuzzer: ${{ steps.matrix-load.outputs.matrix }}

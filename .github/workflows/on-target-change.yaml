@@ -24,7 +24,7 @@ jobs:
           MATRIX="$(cat .github/workflows/target-matrix.json)"
           echo 'matrix=${MATRIX}' >> $GITHUB_OUTPUT
       - id: build-push-target
-        uses: ./.github/actions/build-push-target.yaml
+        uses: ./.github/workflows/build-push-target.yaml
         with:
           fuzzer: ${{ steps.fuzzer-matrix-load.outputs.matrix }}
           target: ${{ steps.target-matrix-load.outputs.matrix }}
