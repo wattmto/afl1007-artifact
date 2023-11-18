@@ -54,4 +54,5 @@ RUN export CC=/aflgo/instrument/aflgo-clang && \
 
 WORKDIR /
 
-CMD ["/libxml2/xmllint", "--valid --recover @@", "45m", "1h"]
+ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid --recover @@"]
+CMD ["45m", "1h"]
