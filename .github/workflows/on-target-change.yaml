@@ -18,7 +18,7 @@ jobs:
       - id: fuzzer-matrix-load
         run: |
           MATRIX="$(cat .github/workflows/fuzzer-matrix.json)"
-          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+          echo 'matrix=${MATRIX}' >> $GITHUB_OUTPUT
       - id: target-matrix-load
         run: |
           MATRIX="$(cat .github/workflows/target-matrix.json)"
