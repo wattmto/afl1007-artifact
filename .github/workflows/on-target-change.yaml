@@ -1,0 +1,28 @@
+name: 'On Target Change'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker/**'
+      - 'target/**'
+  pull_request:
+
+jobs:
+  build-push-target:
+    runs-on: ubuntu-latest
+    steps:
+      - id: fuzzer-matrix-load
+        run: |
+          MATRIX="$(cat .github/workflows/fuzzer-matrix.json)"
+          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+      - id: target-matrix-load
+        run: |
+          MATRIX="$(cat .github/workflows/target-matrix.json)"
+          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+      - id: build-push-target
+        uses: ./.github/actions/build-push-target.yaml
+        with:
+          fuzzer: ${{ steps.fuzzer-matrix-load.outputs.matrix }}
+          target: ${{ steps.target-matrix-load.outputs.matrix }}
