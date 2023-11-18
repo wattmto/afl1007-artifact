@@ -12,6 +12,8 @@ jobs:
   build-push-fuzzer:
     runs-on: ubuntu-latest
     steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
       - id: matrix-load
         run: |
           MATRIX="$(cat .github/workflows/fuzzer-matrix.json)"
