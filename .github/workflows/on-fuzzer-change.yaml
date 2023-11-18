@@ -1,0 +1,24 @@
+name: 'On Fuzzer Change'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker/**'
+  pull_request:
+
+jobs:
+  build-push-fuzzer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+      - id: matrix-load
+        run: |
+          MATRIX="$(cat .github/workflows/fuzzer-matrix.json)"
+          echo 'matrix=${MATRIX}' >> $GITHUB_OUTPUT
+      - id: build-push-fuzzer
+        uses: ./.github/workflows/build-push-fuzzer.yaml
+        with:
+          fuzzer: ${{ steps.matrix-load.outputs.matrix }}
