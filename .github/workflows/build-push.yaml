@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'docker/**'
+      - 'target/**'
   pull_request:
 
 permissions:
@@ -44,7 +47,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
-  build-and-push-targets:
+  build-and-push-target:
     needs: [build-and-push-fuzzer]
     strategy:
       matrix:
