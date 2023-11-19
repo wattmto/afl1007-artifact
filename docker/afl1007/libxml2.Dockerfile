@@ -1,7 +1,8 @@
 ARG TAG=main
-FROM ghcr.io/wattmto/afl1007-artifact/afl1007:${TAG}
-
 ARG CVE=2017-5969
+FROM ghcr.io/wattmto/afl1007-artifact/afl1007:${TAG} AS builder
+
+ARG CVE
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -54,5 +55,10 @@ RUN export CC=/aflgo/instrument/aflgo-clang && \
 
 WORKDIR /
 
-ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid --recover @@"]
+FROM builder as entrypoint-2017-5969
+
+ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--recover @@"]
 CMD ["45m", "1h"]
+
+# hadolint ignore=DL3006
+FROM entrypoint-${CVE}
