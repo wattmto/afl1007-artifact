@@ -65,5 +65,10 @@ FROM builder as entrypoint-2017-9047
 ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid @@"]
 CMD ["45m", "1h"]
 
+FROM builder as entrypoint-2017-9048
+
+ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid @@"]
+CMD ["45m", "1h"]
+
 # hadolint ignore=DL3006
 FROM entrypoint-${CVE}

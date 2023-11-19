@@ -55,7 +55,8 @@ jobs:
         fuzzer: [aflgo, afl1007]
         target: [
           {project: 'libxml2', cve: '2017-5969'},
-          {project: 'libxml2', cve: '2017-9047'}
+          {project: 'libxml2', cve: '2017-9047'},
+          {project: 'libxml2', cve: '2017-9048'}
         ]
     runs-on: ubuntu-latest
     steps:
