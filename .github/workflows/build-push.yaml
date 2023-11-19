@@ -111,7 +111,8 @@ jobs:
           --tmpfs /tmp \
           -v "$(pwd)/experiment/${{ matrix.target.project }}/in:/in" \
           -v "$(pwd)/experiment/${{ matrix.target.project }}/out":/out \
-          ${{ steps.targetimage.outputs.image }}
+          ${{ steps.targetimage.outputs.image }} \
+          -- 30m 1h
           sudo chown -R "${USER}:" experiment/${{ matrix.target.project }}/out
       - name: 'Upload artifact'
         uses: actions/upload-artifact@v3
