@@ -1,4 +1,4 @@
-name: 'Build and Push'
+name: 'Build, Push and Run'
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
     paths:
       - 'docker/**'
       - 'target/**'
+      - 'experiment/**'
   pull_request:
 
 permissions:
@@ -21,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 'Docker meta'
         id: meta
         uses: docker/metadata-action@v5
@@ -40,14 +41,14 @@ jobs:
       - name: 'Build and push'
         uses: docker/build-push-action@v5
         with:
-          cache-from: type=ghq
+          cache-from: type=gha
           cache-to: type=gha,mode=max
           file: docker/${{ matrix.fuzzer }}/Dockerfile
           labels: ${{ steps.meta.outputs.labels }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
-  build-and-push-target:
+  build-push-run-target:
     needs: [build-and-push-fuzzer]
     strategy:
       matrix:
@@ -58,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 'Docker meta'
         id: meta
         uses: docker/metadata-action@v5
@@ -90,9 +91,34 @@ jobs:
           build-args: |
             CVE=${{ matrix.target.cve }}
             TAG=${{ steps.basetag.outputs.tag }}
-          cache-from: type=ghq
+          cache-from: type=gha
           cache-to: type=gha,mode=max
           file: docker/${{ matrix.fuzzer }}/${{ matrix.target.project }}.Dockerfile
           labels: ${{ steps.meta.outputs.labels }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+      - name: 'Get target image'
+        id: targetimage
+        run: |
+          IMAGE=$(echo ${{ steps.meta.outputs.tags }} | cut -d' ' -f1)
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
+      - name: 'Run fuzzing'
+        run: |
+          sudo bash -c 'echo core >/proc/sys/kernel/core_pattern'
+          docker run --rm \
+          --network none \
+          --cpus 1 \
+          --tmpfs /tmp \
+          -v "$(pwd)/experiment/${{ matrix.target.project }}/in:/in" \
+          -v "$(pwd)/experiment/${{ matrix.target.project }}/out":/out \
+          ${{ steps.targetimage.outputs.image }}
+          sudo chown -R "${USER}:" experiment/${{ matrix.target.project }}/out
+      - name: 'Upload artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.target.cve }}-${{ matrix.fuzzer }}-fuzzing-results
+          path: |
+            experiment/${{ matrix.target.project }}/out
+            !experiment/${{ matrix.target.project }}/out/crashes
+            !experiment/${{ matrix.target.project }}/out/hangs
+            !experiment/${{ matrix.target.project }}/out/queue
