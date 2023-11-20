@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         fuzzer: [aflgo, afl1007]
-    runs-on: ubuntu-latest
+    runs-on: lab1
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
           {project: 'libxml2', cve: '2017-9047'},
           {project: 'libxml2', cve: '2017-9048'}
         ]
-    runs-on: ubuntu-latest
+    runs-on: lab1
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v4
