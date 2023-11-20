@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -euo pipefail
+
+#
+# run-fuzzing <fuzzers> <targets> <id>
+#
+
+IFS=',' read -ra fuzzers <<< $1
+IFS=',' read -ra cves <<< $2
+ID=''
+
+if [ $3 > 0 ]; then
+  ID=$3
+fi
+
+for fuzzer in "${fuzzers[@]}"
+do
+  for cve in "${cves[@]}"
+  do
+    echo "Running ${cve} on ${fuzzer}"
+    project="$(cat cve.json | jq -er --arg cve ${cve} '.[] | select(.cve == $cve) | .project')"
+    docker run --name "${cve}-${fuzzer}-$(date -I)${ID}" --rm -d --network none --cpus 1 --tmpfs /tmp -v "$(pwd)/experiment/${project}/in:/in" -v "$(pwd)/experiment/${project}/out/${cve}-${fuzzer}-$(date -I)${ID}:/out" "afl1007-artifact/${fuzzer}/${cve}:$(date -I)"
+  done
+done
