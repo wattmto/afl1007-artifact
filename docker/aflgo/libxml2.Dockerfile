@@ -58,18 +58,18 @@ WORKDIR /
 
 FROM builder as entrypoint-2017-5969
 
-ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--recover --noout --nonet --nowarning @@"]
-CMD ["45m", "1h", "10"]
+ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--recover --nonet --nowarning @@"]
+CMD ["45m", "1h", "5"]
 
 FROM builder as entrypoint-2017-9047
 
-ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid --noout --nonet --nowarning @@"]
-CMD ["45m", "1h", "10"]
+ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid --nonet --nowarning @@"]
+CMD ["45m", "1h", "5"]
 
 FROM builder as entrypoint-2017-9048
 
-ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid --noout --nonet --nowarning @@"]
-CMD ["45m", "1h", "10"]
+ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid --nonet --nowarning @@"]
+CMD ["45m", "1h", "5"]
 
 # hadolint ignore=DL3006
 FROM entrypoint-${CVE}
