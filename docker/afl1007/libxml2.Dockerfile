@@ -1,6 +1,7 @@
 ARG TAG=main
 ARG CVE=2017-5969
-FROM ghcr.io/wattmto/afl1007-artifact/afl1007:${TAG} AS builder
+ARG PREFIX
+FROM ${PREFIX}afl1007-artifact/afl1007:${TAG} AS builder
 
 ARG CVE
 
