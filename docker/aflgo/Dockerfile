@@ -15,6 +15,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     sudo \
     unzip \
     wget \
+    xz-utils \
     zsh \
     && rm -rf /var/lib/apt/lists/*
 

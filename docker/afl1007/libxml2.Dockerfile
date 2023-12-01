@@ -7,11 +7,11 @@ ARG CVE
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-ADD https://github.com/GNOME/libxml2/archive/refs/tags/v2.9.4.zip /
+ADD https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.4.tar.xz /
 
-RUN unzip v2.9.4.zip && \
+RUN tar -xf libxml2-2.9.4.tar.xz && \
     mv /libxml2-2.9.4 /libxml2 && \
-    rm v2.9.4.zip
+    rm libxml2-2.9.4.tar.xz
 
 RUN mkdir /inst-assist
 

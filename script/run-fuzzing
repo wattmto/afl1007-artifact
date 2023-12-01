@@ -3,16 +3,21 @@
 set -euo pipefail
 
 #
-# run-fuzzing <fuzzers> <targets> <id>
+# run-fuzzing <fuzzers> <targets> -i <id> -r
 #
 
 IFS=',' read -ra fuzzers <<< $1
 IFS=',' read -ra cves <<< $2
 ID=''
+DOCKER_OPTIONS=''
 
-if [ $3 > 0 ]; then
-  ID=$3
-fi
+while getopts 'i:' flag; do
+  case "${flag}" in
+    i) ID="-${OPTARG}" ;;
+    r) DOCKER_OPTIONS="${DOCKER_OPTIONS} --rm" ;;
+    *) error "Unexpected option ${flag}" ;;
+  esac
+done
 
 for fuzzer in "${fuzzers[@]}"
 do
@@ -20,6 +25,6 @@ do
   do
     echo "Running ${cve} on ${fuzzer}"
     project="$(cat cve.json | jq -er --arg cve ${cve} '.[] | select(.cve == $cve) | .project')"
-    docker run --name "${cve}-${fuzzer}-$(date -I)${ID}" --rm -d --network none --cpus 1 --tmpfs /tmp -v "$(pwd)/experiment/${project}/in:/in" -v "$(pwd)/experiment/${project}/out/${cve}-${fuzzer}-$(date -I)${ID}:/out" "afl1007-artifact/${fuzzer}/${cve}:$(date -I)"
+    docker run --name "${cve}-${fuzzer}-$(date -I)${ID}" -d --network none --cpus 1 --tmpfs /tmp -v "$(pwd)/experiment/${project}/in:/in" -v "$(pwd)/experiment/${project}/out/${cve}-${fuzzer}-$(date -I)${ID}:/out" ${DOCKER_OPTIONS} "afl1007-artifact/${fuzzer}/${cve}:$(date -I)"
   done
 done
