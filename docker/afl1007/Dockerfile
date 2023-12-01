@@ -32,7 +32,6 @@ RUN mkdir -p /etc/apt/keyrings && \
     llvm-11-dev \
     && rm -rf /var/lib/apt/lists/*
 
-
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     graphviz \
     python3 \
@@ -49,11 +48,11 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     pydot \
     pydotplus
 
-RUN git clone https://github.com/aflgo/aflgo
+RUN git clone --branch fix-core-search --depth 1 https://github.com/wattmto/aflgo.git
 
 WORKDIR /aflgo
 
-RUN git reset --hard fa125da5d70621daf7141c6279877c97708c8c1f && \
+RUN git reset --hard de5cc3bad91b88747a1058f32460cf70b025d4ed && \
     git clean -f -d
 
 COPY docker/afl1007/diff.patch /aflgo/diff.patch

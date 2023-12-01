@@ -49,11 +49,11 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     pydot \
     pydotplus
 
-RUN git clone https://github.com/aflgo/aflgo
+RUN git clone --branch fix-core-search --depth 1 https://github.com/wattmto/aflgo.git
 
 WORKDIR /aflgo
 
-RUN git reset --hard fa125da5d70621daf7141c6279877c97708c8c1f && \
+RUN git reset --hard de5cc3bad91b88747a1058f32460cf70b025d4ed && \
     git clean -f -d
 
 RUN ln -s /usr/bin/llvm-ar-11 /usr/bin/llvm-ar && \
