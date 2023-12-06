@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -euo pipefail
+
+IFS=',' read -ra fuzzers <<< $1
+CMDS=()
+
+for fuzzer in "${fuzzers[@]}"
+do
+  CMDS+=("docker buildx build --file docker/${fuzzer}/Dockerfile --tag afl1007-artifact/${fuzzer}:$(date -I) .")
+done
+
+xpanes -c "{}" "${CMDS[@]}"

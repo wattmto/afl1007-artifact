@@ -7,14 +7,17 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     ca-certificates \
     curl \
     cmake \
+    eatmydata \
     git \
     gnupg \
+    gnuplot \
     jq \
     lsb-release \
     make \
     sudo \
     unzip \
     wget \
+    xz-utils \
     zsh \
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,7 +33,6 @@ RUN mkdir -p /etc/apt/keyrings && \
     llvm-11 \
     llvm-11-dev \
     && rm -rf /var/lib/apt/lists/*
-
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     graphviz \
@@ -48,16 +50,12 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     pydot \
     pydotplus
 
-RUN git clone https://github.com/aflgo/aflgo
+RUN git clone --branch afl1007 https://github.com/wattmto/aflgo.git
 
 WORKDIR /aflgo
 
-RUN git reset --hard fa125da5d70621daf7141c6279877c97708c8c1f && \
+RUN git reset --hard 12c71c746560e58ac18ebcea373c6950d901d9ae && \
     git clean -f -d
-
-COPY docker/afl1007/diff.patch /aflgo/diff.patch
-
-RUN git apply diff.patch
 
 RUN ln -s /usr/bin/llvm-ar-11 /usr/bin/llvm-ar && \
     ln -s /usr/bin/llvm-as-11 /usr/bin/llvm-as && \
