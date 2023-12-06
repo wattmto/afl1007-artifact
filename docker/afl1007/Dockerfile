@@ -48,16 +48,12 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     pydot \
     pydotplus
 
-RUN git clone --branch fix-core-search --depth 1 https://github.com/wattmto/aflgo.git
+RUN git clone --branch afl1007 https://github.com/wattmto/aflgo.git
 
 WORKDIR /aflgo
 
-RUN git reset --hard de5cc3bad91b88747a1058f32460cf70b025d4ed && \
+RUN git reset --hard 12c71c746560e58ac18ebcea373c6950d901d9ae && \
     git clean -f -d
-
-COPY docker/afl1007/diff.patch /aflgo/diff.patch
-
-RUN git apply diff.patch
 
 RUN ln -s /usr/bin/llvm-ar-11 /usr/bin/llvm-ar && \
     ln -s /usr/bin/llvm-as-11 /usr/bin/llvm-as && \

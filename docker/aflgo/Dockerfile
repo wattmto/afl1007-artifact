@@ -49,7 +49,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     pydot \
     pydotplus
 
-RUN git clone --branch fix-core-search --depth 1 https://github.com/wattmto/aflgo.git
+RUN git clone --branch fix-core-search https://github.com/wattmto/aflgo.git
 
 WORKDIR /aflgo
 
