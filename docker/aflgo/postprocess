@@ -2,6 +2,6 @@
 
 set -euo pipefail
 
-/aflgo/afl-2.57b/afl-plot /tmp/out /tmp/out/plot
-
 cp -r /tmp/out/* /out/
+
+/aflgo/afl-2.57b/afl-plot /out /out/plot

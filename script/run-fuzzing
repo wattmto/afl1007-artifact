@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -euo pipefail
+set -x
 
 #
 # run-fuzzing <fuzzers> <targets> -i <id> -r

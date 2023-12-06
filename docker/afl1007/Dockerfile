@@ -7,8 +7,10 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     ca-certificates \
     curl \
     cmake \
+    eatmydata \
     git \
     gnupg \
+    gnuplot \
     jq \
     lsb-release \
     make \

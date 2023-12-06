@@ -18,6 +18,6 @@ fi
 
 cp -r /in /tmp/in
 
-timeout $4 /aflgo/afl-2.57b/afl-fuzz -i /tmp/in -o /tmp/out -m none -z exp -c $3 -t $5 -- $1 $2
+timeout $4 /aflgo/afl-2.57b/afl-fuzz -i /tmp/in -o /tmp/out -m none -z exp -c $3 -t $5 -- $1 $2 || true
 
 /bin/postprocess
