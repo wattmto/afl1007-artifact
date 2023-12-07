@@ -48,8 +48,8 @@ RUN /aflgo/distance/gen_distance_fast.py /libxml2 /inst-assist xmllint
 
 RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXX=/aflgo/instrument/aflgo-clang++ && \
-    export CFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
-    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
+    export CFLAGS="-distance=/inst-assist/distance.cfg.txt -DFORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=undefined,address -fno-omit-frame-pointer -g -Wno-error" && \
+    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt -DFORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=undefined,address -fno-omit-frame-pointer -g -Wno-error" && \
     make clean && \
     ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
     make -j "$(nproc)" xmllint

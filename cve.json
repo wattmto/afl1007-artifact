@@ -4,6 +4,10 @@
     "project": "libxml2"
   },
   {
+    "cve": "2017-8392",
+    "project": "binutils"
+  },
+  {
     "cve": "2017-9047",
     "project": "libxml2"
   },
