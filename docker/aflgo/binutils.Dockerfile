@@ -18,6 +18,12 @@ RUN tar xf binutils-2.28.tar.gz && \
 
 FROM binutils-2-28-downloader AS downloader-2017-8392
 
+FROM binutils-2-28-downloader AS downloader-2017-8396
+
+FROM binutils-2-28-downloader AS downloader-2017-8397
+
+FROM binutils-2-28-downloader AS downloader-2017-8398
+
 FROM downloader-${CVE} AS downloader
 
 FROM ${PREFIX}afl1007-artifact/aflgo:${TAG} AS preinst-builder
@@ -78,6 +84,12 @@ RUN /aflgo/distance/gen_distance_fast.py /binutils/binutils /inst-assist objdump
 
 FROM objdump-preinst-runner AS preinst-runner-2017-8392
 
+FROM objdump-preinst-runner AS preinst-runner-2017-8396
+
+FROM objdump-preinst-runner AS preinst-runner-2017-8397
+
+FROM objdump-preinst-runner AS preinst-runner-2017-8398
+
 FROM preinst-runner-${CVE} AS builder
 
 RUN export CC=/aflgo/instrument/aflgo-clang && \
@@ -95,6 +107,21 @@ WORKDIR /
 FROM builder AS entrypoint-2017-8392
 
 ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-SD @@"]
+CMD ["45m", "1h", "1000"]
+
+FROM builder AS entrypoint-2017-8396
+
+ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-W @@"]
+CMD ["45m", "1h", "1000"]
+
+FROM builder AS entrypoint-2017-8397
+
+ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-W @@"]
+CMD ["45m", "1h", "1000"]
+
+FROM builder AS entrypoint-2017-8398
+
+ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-W @@"]
 CMD ["45m", "1h", "1000"]
 
 # hadolint ignore=DL3006

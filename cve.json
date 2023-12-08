@@ -8,6 +8,18 @@
     "project": "binutils"
   },
   {
+    "cve": "2017-8396",
+    "project": "binutils"
+  },
+  {
+    "cve": "2017-8397",
+    "project": "binutils"
+  },
+  {
+    "cve": "2017-8398",
+    "project": "binutils"
+  },
+  {
     "cve": "2017-9047",
     "project": "libxml2"
   },
