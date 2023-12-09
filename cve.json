@@ -8,6 +8,18 @@
     "project": "binutils"
   },
   {
+    "cve": "2017-8393",
+    "project": "binutils"
+  },
+  {
+    "cve": "2017-8394",
+    "project": "binutils"
+  },
+  {
+    "cve": "2017-8395",
+    "project": "binutils"
+  },
+  {
     "cve": "2017-8396",
     "project": "binutils"
   },

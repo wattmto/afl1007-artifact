@@ -18,12 +18,19 @@ RUN tar xf binutils-2.28.tar.gz && \
 
 FROM binutils-2-28-downloader AS downloader-2017-8392
 
+FROM binutils-2-28-downloader AS downloader-2017-8393
+
+FROM binutils-2-28-downloader AS downloader-2017-8394
+
+FROM binutils-2-28-downloader AS downloader-2017-8395
+
 FROM binutils-2-28-downloader AS downloader-2017-8396
 
 FROM binutils-2-28-downloader AS downloader-2017-8397
 
 FROM binutils-2-28-downloader AS downloader-2017-8398
 
+# hadolint ignore=DL3006
 FROM downloader-${CVE} AS downloader
 
 FROM ${PREFIX}afl1007-artifact/aflgo:${TAG} AS preinst-builder
@@ -71,7 +78,9 @@ RUN LLVM_CONFIG=$(which llvm-config) && \
     ./configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld && \
     make -j "$(nproc)"
 
-FROM preinst-builder AS objdump-preinst-runner
+FROM preinst-builder AS objdump-sd-preinst-runner
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN /binutils/binutils/objdump -SD /in/elf-Linux-x64-bash
 
@@ -82,14 +91,60 @@ RUN grep -v "^$" /inst-assist/BBnames.txt | rev | cut -d: -f2- | rev | sort | un
 
 RUN /aflgo/distance/gen_distance_fast.py /binutils/binutils /inst-assist objdump
 
-FROM objdump-preinst-runner AS preinst-runner-2017-8392
+FROM objdump-sd-preinst-runner AS preinst-runner-2017-8392
 
-FROM objdump-preinst-runner AS preinst-runner-2017-8396
+FROM preinst-builder AS objdump-w-preinst-runner
 
-FROM objdump-preinst-runner AS preinst-runner-2017-8397
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-FROM objdump-preinst-runner AS preinst-runner-2017-8398
+RUN /binutils/binutils/objdump -W /in/elf-Linux-x64-bash
 
+RUN grep -v "^$" /inst-assist/BBnames.txt | rev | cut -d: -f2- | rev | sort | uniq > /inst-assist/BBnames2.txt && \
+    mv /inst-assist/BBnames2.txt /inst-assist/BBnames.txt && \
+    grep -Ev "^[^,]*$|^([^,]*,){2,}[^,]*$" /inst-assist/BBcalls.txt | sort | uniq > /inst-assist/BBcalls2.txt && \
+    mv /inst-assist/BBcalls2.txt /inst-assist/BBcalls.txt
+
+RUN /aflgo/distance/gen_distance_fast.py /binutils/binutils /inst-assist objdump
+
+FROM objdump-w-preinst-runner AS preinst-runner-2017-8396
+
+FROM objdump-w-preinst-runner AS preinst-runner-2017-8397
+
+FROM objdump-w-preinst-runner AS preinst-runner-2017-8398
+
+FROM preinst-builder AS objcopy-cds-preinst-runner
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN /binutils/binutils/objcopy --compress-debug-sections /in/elf-Linux-x64-bash out
+
+RUN grep -v "^$" /inst-assist/BBnames.txt | rev | cut -d: -f2- | rev | sort | uniq > /inst-assist/BBnames2.txt && \
+    mv /inst-assist/BBnames2.txt /inst-assist/BBnames.txt && \
+    grep -Ev "^[^,]*$|^([^,]*,){2,}[^,]*$" /inst-assist/BBcalls.txt | sort | uniq > /inst-assist/BBcalls2.txt && \
+    mv /inst-assist/BBcalls2.txt /inst-assist/BBcalls.txt
+
+RUN /aflgo/distance/gen_distance_fast.py /binutils/binutils /inst-assist objcopy
+
+FROM objcopy-cds-preinst-runner AS preinst-runner-2017-8393
+
+FROM objcopy-cds-preinst-runner AS preinst-runner-2017-8395
+
+FROM preinst-builder AS objcopy-gs-preinst-runner
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN /binutils/binutils/objcopy -Gs /in/elf-Linux-x64-bash out
+
+RUN grep -v "^$" /inst-assist/BBnames.txt | rev | cut -d: -f2- | rev | sort | uniq > /inst-assist/BBnames2.txt && \
+    mv /inst-assist/BBnames2.txt /inst-assist/BBnames.txt && \
+    grep -Ev "^[^,]*$|^([^,]*,){2,}[^,]*$" /inst-assist/BBcalls.txt | sort | uniq > /inst-assist/BBcalls2.txt && \
+    mv /inst-assist/BBcalls2.txt /inst-assist/BBcalls.txt
+
+RUN /aflgo/distance/gen_distance_fast.py /binutils/binutils /inst-assist objcopy
+
+FROM objcopy-cds-preinst-runner AS preinst-runner-2017-8394
+
+# hadolint ignore=DL3006
 FROM preinst-runner-${CVE} AS builder
 
 RUN export CC=/aflgo/instrument/aflgo-clang && \
@@ -107,6 +162,21 @@ WORKDIR /
 FROM builder AS entrypoint-2017-8392
 
 ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-SD @@"]
+CMD ["45m", "1h", "1000"]
+
+FROM builder AS entrypoint-2017-8393
+
+ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objcopy", "--compress-debug-sections @@ out"]
+CMD ["45m", "1h", "1000"]
+
+FROM builder AS entrypoint-2017-8394
+
+ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objcopy", "-Gs @@ out"]
+CMD ["45m", "1h", "1000"]
+
+FROM builder AS entrypoint-2017-8395
+
+ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objcopy", "--compress-debug-sections @@ out"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8396
