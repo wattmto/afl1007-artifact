@@ -43,6 +43,7 @@ do
   do
     echo "Running ${cve} on ${fuzzer}"
     project="$(cat cve.json | jq -er --arg cve ${cve} '.[] | select(.cve == $cve) | .project')"
-    echo docker run --name "${cve}-${fuzzer}-$(date -I)${ID}" -d --network none --cpus 1 --tmpfs /tmp -v "$(pwd)/experiment/${project}/in:/in" -v "$(pwd)/experiment/${project}/out/${cve}-${fuzzer}-$(date -I)${ID}:/out" ${DOCKER_OPTIONS} "afl1007-artifact/${fuzzer}/${cve}:$(date -I)" 5h 6h 10
+    timeout="$(cat cve.json | jq -er --arg cve ${cve} '.[] | select(.cve == $cve) | .timeout')"
+    echo docker run --name "${cve}-${fuzzer}-$(date -I)${ID}" -d --network none --cpus 1 --tmpfs /tmp -v "$(pwd)/experiment/${project}/in:/in" -v "$(pwd)/experiment/${project}/out/${cve}-${fuzzer}-$(date -I)${ID}:/out" ${DOCKER_OPTIONS} "afl1007-artifact/${fuzzer}/${cve}:$(date -I)" 5h 6h "${timeout}"
   done
 done

@@ -155,6 +155,11 @@ jobs:
         run: |
           project="$(cat cve.json | jq -er --arg cve ${{ matrix.cve }} '.[] | select(.cve == $cve) | .project')"
           echo "project=${project}" >> $GITHUB_OUTPUT
+      - name: 'Get timeout'
+        id: timeout
+        run: |
+          timeout="$(cat cve.json | jq -er --arg cve ${{ matrix.cve }} '.[] | select(.cve == $cve) | .timeout')"
+          echo "timeout=${timeout}" >> $GITHUB_OUTPUT
       - name: 'Run fuzzing'
         run: |
           sudo bash -c 'echo core >/proc/sys/kernel/core_pattern'
@@ -165,7 +170,7 @@ jobs:
           -v "$(pwd)/experiment/${{ steps.project.outputs.project }}/in:/in" \
           -v "$(pwd)/experiment/${{ steps.project.outputs.project }}/out":/out \
           ${{ steps.targetimage.outputs.image }} \
-          300m 350m 10
+          300m 350m ${{ steps.timeout.outputs.timeout }}
           sudo chown -R "${USER}:" experiment/${{ steps.project.outputs.project }}/out
       - name: 'Upload artifact'
         uses: actions/upload-artifact@v3
