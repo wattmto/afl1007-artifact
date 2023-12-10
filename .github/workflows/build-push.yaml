@@ -1,0 +1,164 @@
+name: 'Build, Push and Run'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker/**'
+      - 'target/**'
+      - 'experiment/**'
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push-fuzzer:
+    strategy:
+      matrix:
+        fuzzer: [aflgo, afl1007]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+      - name: 'Docker meta'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.fuzzer }}
+      - name: 'Set up QEMU'
+        uses: docker/setup-qemu-action@v3
+      - name: 'Set up Docker Buildx'
+        uses: docker/setup-buildx-action@v3
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: 'Build and push'
+        uses: docker/build-push-action@v5
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: docker/${{ matrix.fuzzer }}/Dockerfile
+          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+  build-push-target:
+    needs: [build-push-fuzzer]
+    strategy:
+      matrix:
+        fuzzer: [aflgo, afl1007]
+        cve: [
+          2017-5969,
+          2017-9047,
+          2017-9048
+        ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+      - name: 'Docker meta'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.fuzzer }}/${{ matrix.cve }}
+      - name: 'Docker base meta'
+        id: basemeta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.fuzzer }}
+      - name: 'Get base tag'
+        id: basetag
+        run: |
+          tag=$(echo ${{ steps.basemeta.outputs.tags }} | cut -d: -f2)
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
+      - name: 'Get a project name'
+        id: project
+        run: |
+          project="$(cat cve.json | jq -er --arg cve ${{ matrix.cve }} '.[] | select(.cve == $cve) | .project')"
+          echo "project=${project}" >> $GITHUB_OUTPUT
+      - name: 'Set up QEMU'
+        uses: docker/setup-qemu-action@v3
+      - name: 'Set up Docker Buildx'
+        uses: docker/setup-buildx-action@v3
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: 'Build and push'
+        uses: docker/build-push-action@v5
+        with:
+          build-args: |
+            PREFIX=ghcr.io/wattmto/
+            CVE=${{ matrix.cve }}
+            TAG=${{ steps.basetag.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: docker/${{ matrix.fuzzer }}/${{ steps.project.outputs.project }}.Dockerfile
+          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+  run-fuzzer:
+    needs: [build-push-target]
+    strategy:
+      matrix:
+        fuzzer: [aflgo, afl1007]
+        cve: [
+          2017-5969,
+          2017-9047,
+          2017-9048
+        ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: 'Docker meta'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.fuzzer }}/${{ matrix.cve }}
+      - name: 'Get target image'
+        id: targetimage
+        run: |
+          IMAGE=$(echo ${{ steps.meta.outputs.tags }} | cut -d' ' -f1)
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
+      - name: 'Get a project name'
+        id: project
+        run: |
+          project="$(cat cve.json | jq -er --arg cve ${{ matrix.cve }} '.[] | select(.cve == $cve) | .project')"
+          echo "project=${project}" >> $GITHUB_OUTPUT
+      - name: 'Run fuzzing'
+        run: |
+          sudo bash -c 'echo core >/proc/sys/kernel/core_pattern'
+          docker run --rm \
+          --network none \
+          --cpus 1 \
+          --tmpfs /tmp \
+          -v "$(pwd)/experiment/${{ steps.project.outputs.project }}/in:/in" \
+          -v "$(pwd)/experiment/${{ steps.project.outputs.project }}/out":/out \
+          ${{ steps.targetimage.outputs.image }} \
+          300m 350m 10
+          sudo chown -R "${USER}:" experiment/${{ steps.project.outputs.project }}/out
+      - name: 'Upload artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.cve }}-${{ matrix.fuzzer }}-fuzzing-results
+          path: |
+            experiment/${{ steps.project.outputs.project }}/out
+            !experiment/${{ steps.project.outputs.project }}/out/crashes
+            !experiment/${{ steps.project.outputs.project }}/out/hangs
+            !experiment/${{ steps.project.outputs.project }}/out/queue
