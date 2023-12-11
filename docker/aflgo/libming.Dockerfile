@@ -4,9 +4,9 @@ ARG PREFIX
 
 FROM alpine:3 AS libming-4-7-downloader
 
-RUN apk add --no-cache git
-
-RUN git clone --branch ming-0_4_7 --depth 1 https://github.com/libming/libming.git
+# hadolint ignore=DL3018
+RUN apk add --no-cache git && \
+    git clone --branch ming-0_4_7 --depth 1 https://github.com/libming/libming.git
 
 FROM libming-4-7-downloader AS downloader-2016-9827
 
