@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -euo pipefail
+set -x
 
 IFS=',' read -ra fuzzers <<< $1
 IFS=',' read -ra cves <<< $2
@@ -10,7 +11,8 @@ for fuzzer in "${fuzzers[@]}"
 do
   for cve in "${cves[@]}"
   do
-    CMDS+=("docker buildx build --build-arg CVE=${cve} --build-arg TAG=$(date -I) --file docker/${fuzzer}/libxml2.Dockerfile --tag afl1007-artifact/${fuzzer}/${cve}:$(date -I) .")
+    project="$(cat cve.json | jq -er --arg cve ${cve} '.[] | select(.cve == $cve) | .project')"
+    CMDS+=("docker buildx build --build-arg CVE=${cve} --build-arg TAG=$(date -I) --file docker/${fuzzer}/${project}.Dockerfile --tag afl1007-artifact/${fuzzer}/${cve}:$(date -I) .")
   done
 done
 

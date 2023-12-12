@@ -1,14 +1,52 @@
 [
   {
     "cve": "2017-5969",
-    "project": "libxml2"
+    "project": "libxml2",
+    "timeout": 10
+  },
+  {
+    "cve": "2017-8392",
+    "project": "binutils",
+    "timeout": 40
+  },
+  {
+    "cve": "2017-8393",
+    "project": "binutils",
+    "timeout": 5
+  },
+  {
+    "cve": "2017-8394",
+    "project": "binutils",
+    "timeout": 5
+  },
+  {
+    "cve": "2017-8395",
+    "project": "binutils",
+    "timeout": 10
+  },
+  {
+    "cve": "2017-8396",
+    "project": "binutils",
+    "timeout": 5
+  },
+  {
+    "cve": "2017-8397",
+    "project": "binutils",
+    "timeout": 5
+  },
+  {
+    "cve": "2017-8398",
+    "project": "binutils",
+    "timeout": 5
   },
   {
     "cve": "2017-9047",
-    "project": "libxml2"
+    "project": "libxml2",
+    "timeout": 10
   },
   {
     "cve": "2017-9048",
-    "project": "libxml2"
+    "project": "libxml2",
+    "timeout": 10
   }
 ]

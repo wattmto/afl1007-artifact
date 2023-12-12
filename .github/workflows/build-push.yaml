@@ -55,6 +55,13 @@ jobs:
         fuzzer: [aflgo, afl1007]
         cve: [
           2017-5969,
+          2017-8392,
+          2017-8393,
+          2017-8394,
+          2017-8395,
+          2017-8396,
+          2017-8397,
+          2017-8398,
           2017-9047,
           2017-9048
         ]
@@ -113,6 +120,13 @@ jobs:
         fuzzer: [aflgo, afl1007]
         cve: [
           2017-5969,
+          2017-8392,
+          2017-8393,
+          2017-8394,
+          2017-8395,
+          2017-8396,
+          2017-8397,
+          2017-8398,
           2017-9047,
           2017-9048
         ]
@@ -141,6 +155,11 @@ jobs:
         run: |
           project="$(cat cve.json | jq -er --arg cve ${{ matrix.cve }} '.[] | select(.cve == $cve) | .project')"
           echo "project=${project}" >> $GITHUB_OUTPUT
+      - name: 'Get timeout'
+        id: timeout
+        run: |
+          timeout="$(cat cve.json | jq -er --arg cve ${{ matrix.cve }} '.[] | select(.cve == $cve) | .timeout')"
+          echo "timeout=${timeout}" >> $GITHUB_OUTPUT
       - name: 'Run fuzzing'
         run: |
           sudo bash -c 'echo core >/proc/sys/kernel/core_pattern'
@@ -151,7 +170,7 @@ jobs:
           -v "$(pwd)/experiment/${{ steps.project.outputs.project }}/in:/in" \
           -v "$(pwd)/experiment/${{ steps.project.outputs.project }}/out":/out \
           ${{ steps.targetimage.outputs.image }} \
-          300m 350m 10
+          300m 350m ${{ steps.timeout.outputs.timeout }}
           sudo chown -R "${USER}:" experiment/${{ steps.project.outputs.project }}/out
       - name: 'Upload artifact'
         uses: actions/upload-artifact@v3
