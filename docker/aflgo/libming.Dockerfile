@@ -64,8 +64,8 @@ RUN /aflgo/distance/gen_distance_fast.py /libming/util /inst-assist swftophp
 
 RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXX=/aflgo/instrument/aflgo-clang++ && \
-    export CFLAGS="-fcommon -distance=/inst-assist/distance.cfg.txt -DFORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=undefined,address -fno-omit-frame-pointer -g -Wno-error" && \
-    export CXXFLAGS="-fcommon -distance=/inst-assist/distance.cfg.txt -DFORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=undefined,address -fno-omit-frame-pointer -g -Wno-error" && \
+    export CFLAGS="-fcommon -distance=/inst-assist/distance.cfg.txt -fsanitize=address -fno-omit-frame-pointer" && \
+    export CXXFLAGS="-fcommon -distance=/inst-assist/distance.cfg.txt -fsanitize=address -fno-omit-frame-pointer" && \
     make clean && \
     ./configure --disable-shared --disable-freetype && \
     make -j "$(nproc)"
