@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+if [ ! -d "/in" ]; then
+    echo "Input directory not found!"
+    exit 1
+fi
