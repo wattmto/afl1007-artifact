@@ -161,37 +161,37 @@ WORKDIR /
 
 FROM builder AS entrypoint-2017-8392
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-SD @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8392"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8393
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objcopy", "--compress-debug-sections @@ out"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8393"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8394
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objcopy", "-Gs @@ out"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8394"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8395
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objcopy", "--compress-debug-sections @@ out"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8395"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8396
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-W @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8396"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8397
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-W @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8397"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8398
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-W @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8398"]
 CMD ["45m", "1h", "1000"]
 
 # hadolint ignore=DL3006

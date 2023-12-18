@@ -74,10 +74,10 @@ WORKDIR /
 
 FROM builder as entrypoint-2016-9827
 
-ENTRYPOINT ["/bin/entrypoint", "/libming/util/swftophp", "@@"]
+ENTRYPOINT ["/bin/entrypoint", "2016-9827"]
 CMD ["45m", "1h", "10"]
 
 FROM builder as entrypoint-2016-9829
 
-ENTRYPOINT ["/bin/entrypoint", "/libming/util/swftophp", "@@"]
+ENTRYPOINT ["/bin/entrypoint", "2016-9829"]
 CMD ["45m", "1h", "10"]

@@ -97,6 +97,7 @@ WORKDIR /
 
 COPY docker/afl1007/entrypoint /bin/entrypoint
 COPY docker/afl1007/postprocess /bin/postprocess
+COPY cve.json /cve.json
 
 RUN chmod +x /bin/entrypoint && \
     chmod +x /bin/postprocess

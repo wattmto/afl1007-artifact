@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -euo pipefail
+set -x
+
+IFS=',' read -ra cves <<< $1
+CMDS=()
+
+for cve in "${cves[@]}"
+do
+  project="$(cat cve.json | jq -er --arg cve ${cve} '.[] | select(.cve == $cve) | .project')"
+  CMDS+=("docker buildx build --build-arg CVE=${cve} --build-arg FUZZER=aflgo --build-arg TAG=$(date -I) --file docker/triage/${project}.Dockerfile --tag afl1007-artifact/triage/${cve}:$(date -I) .")
+done
+
+xpanes -c "{}" "${CMDS[@]}"
