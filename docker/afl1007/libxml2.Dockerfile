@@ -1,7 +1,8 @@
 ARG TAG=main
 ARG CVE=2017-5969
 ARG PREFIX
-FROM ${PREFIX}afl1007-artifact/afl1007:${TAG} AS builder
+ARG SAN
+FROM ${PREFIX}afl1007-artifact/afl1007:${TAG} AS distance-builder
 
 ARG CVE
 
@@ -46,6 +47,10 @@ RUN grep -v "^$" /inst-assist/BBnames.txt | rev | cut -d: -f2- | rev | sort | un
 
 RUN /aflgo/distance/gen_distance_fast.py /libxml2 /inst-assist xmllint
 
+FROM distance-builder as builder
+
+WORKDIR /libxml2
+
 RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXX=/aflgo/instrument/aflgo-clang++ && \
     export CFLAGS="-distance=/inst-assist/distance.cfg.txt -fsanitize=address -fno-omit-frame-pointer" && \
@@ -53,6 +58,20 @@ RUN export CC=/aflgo/instrument/aflgo-clang && \
     make clean && \
     ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
     make -j "$(nproc)" xmllint
+
+FROM distance-builder as builder-nosan
+
+WORKDIR /libxml2
+
+RUN export CC=/aflgo/instrument/aflgo-clang && \
+    export CXX=/aflgo/instrument/aflgo-clang++ && \
+    export CFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
+    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
+    make clean && \
+    ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
+    make -j "$(nproc)" xmllint
+
+FROM builder${SAN} as builder
 
 WORKDIR /
 

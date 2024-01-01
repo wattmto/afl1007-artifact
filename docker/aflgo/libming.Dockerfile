@@ -1,6 +1,7 @@
 ARG TAG=main
 ARG CVE=2016-9827
 ARG PREFIX
+ARG SAN
 
 FROM alpine:3 AS libming-4-7-downloader
 
@@ -15,7 +16,7 @@ FROM libming-4-7-downloader AS downloader-2016-9829
 # hadolint ignore=DL3006
 FROM downloader-${CVE} AS downloader
 
-FROM ${PREFIX}afl1007-artifact/aflgo:${TAG} AS builder
+FROM ${PREFIX}afl1007-artifact/aflgo:${TAG} AS distance-builder
 
 ARG CVE
 
@@ -62,6 +63,10 @@ RUN grep -v "^$" /inst-assist/BBnames.txt | rev | cut -d: -f2- | rev | sort | un
 
 RUN /aflgo/distance/gen_distance_fast.py /libming/util /inst-assist swftophp
 
+FROM distance-builder as builder
+
+WORKDIR /libming
+
 RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXX=/aflgo/instrument/aflgo-clang++ && \
     export CFLAGS="-fcommon -distance=/inst-assist/distance.cfg.txt -fsanitize=address -fno-omit-frame-pointer" && \
@@ -69,6 +74,20 @@ RUN export CC=/aflgo/instrument/aflgo-clang && \
     make clean && \
     ./configure --disable-shared --disable-freetype && \
     make -j "$(nproc)"
+
+FROM distance-builder as builder-nosan
+
+WORKDIR /libming
+
+RUN export CC=/aflgo/instrument/aflgo-clang && \
+    export CXX=/aflgo/instrument/aflgo-clang++ && \
+    export CFLAGS="-fcommon -distance=/inst-assist/distance.cfg.txt" && \
+    export CXXFLAGS="-fcommon -distance=/inst-assist/distance.cfg.txt" && \
+    make clean && \
+    ./configure --disable-shared --disable-freetype && \
+    make -j "$(nproc)"
+
+FROM builder${SAN} as builder
 
 WORKDIR /
 

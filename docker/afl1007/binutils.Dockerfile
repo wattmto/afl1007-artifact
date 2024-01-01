@@ -1,6 +1,7 @@
 ARG TAG=main
 ARG CVE=2017-8392
 ARG PREFIX
+ARG SAN
 
 FROM alpine:3 AS input-downloader
 
@@ -156,6 +157,21 @@ RUN export CC=/aflgo/instrument/aflgo-clang && \
     # ignore LeakSanitizer error
     make -j "$(nproc)" || true && \
     make -j "$(nproc)"
+
+# hadolint ignore=DL3006
+FROM preinst-runner-${CVE} AS builder-nosan
+
+RUN export CC=/aflgo/instrument/aflgo-clang && \
+    export CXX=/aflgo/instrument/aflgo-clang++ && \
+    export CFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
+    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
+    make distclean && \
+    ./configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld && \
+    # ignore LeakSanitizer error
+    make -j "$(nproc)" || true && \
+    make -j "$(nproc)"
+
+FROM builder${SAN} as builder
 
 WORKDIR /
 
