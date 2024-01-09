@@ -2,7 +2,25 @@
 
 set -euxo pipefail
 
-if [ ! -d "/in" ]; then
-    echo "Input directory not found!"
-    exit 1
+CMD_TEMPLATE=$@
+CMD=""
+GDBOUT=""
+RESULT=""
+FUNCTION=""
+LINE=""
+
+if [ ! -d "/out" ]; then
+  echo "Output directory not found!"
+  exit 1
 fi
+
+for input in /out/crashes/* ; do
+  if [ -f "${input}" ] && [ "${input}" != "/out/crashes/README.txt" ]; then
+    CMD=${CMD_TEMPLATE//@@/$input}
+    GDBOUT=$(gdb -batch -ex "run" -ex "bt 1" -ex "quit" --args $CMD)
+    RESULT=$(echo $GDBOUT | grep -o "Program received signal [^.]*.")
+    FUNCTION=$(echo $GDBOUT | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+    LINE=$(echo $GDBOUT | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+    echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+  fi
+done

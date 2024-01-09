@@ -6,11 +6,12 @@ set -euo pipefail
 # run-triage -f <fuzzer> -c <cve> -i <id>
 #
 
+date=''
 fuzzer=''
 cve=''
 ID=''
 
-while getopts 'c:f:i:' flag
+while getopts 'c:f:i:d:' flag
 do
   case "${flag}" in
     c)
@@ -22,6 +23,9 @@ do
     i)
       ID="-${OPTARG}"
       ;;
+    d)
+      date="${OPTARG}"
+      ;;
     *)
       error "Unexpected option ${flag}"
       ;;
@@ -29,4 +33,4 @@ do
 done
 
 project="$(cat cve.json | jq -er --arg cve ${cve} '.[] | select(.cve == $cve) | .project')"
-echo docker run --name "triage-${cve}-${fuzzer}-$(date -I)${ID}" -d --rm --network none -v "$(pwd)/experiment/${project}/out/${cve}-${fuzzer}${ID}:/out" "afl1007-artifact/triage/${fuzzer}/${cve}:$(date -I)"
+docker run --name "triage-${cve}-${fuzzer}-${date}${ID}" -d -it --network none --security-opt seccomp=unconfined -v "$(pwd)/experiment/${project}/out/${cve}-${fuzzer}-${date}${ID}:/out" "afl1007-artifact/triage/${cve}:$(date -I)"
