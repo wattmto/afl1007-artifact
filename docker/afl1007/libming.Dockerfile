@@ -13,6 +13,10 @@ FROM libming-4-7-downloader AS downloader-2016-9827
 
 FROM libming-4-7-downloader AS downloader-2016-9829
 
+FROM libming-4-7-downloader AS downloader-2016-9831
+
+FROM libming-4-7-downloader AS downloader-2017-9988
+
 # hadolint ignore=DL3006
 FROM downloader-${CVE} AS downloader
 
@@ -99,4 +103,14 @@ CMD ["45m", "1h", "10"]
 FROM builder as entrypoint-2016-9829
 
 ENTRYPOINT ["/bin/entrypoint", "2016-9829"]
+CMD ["45m", "1h", "10"]
+
+FROM builder as entrypoint-2016-9831
+
+ENTRYPOINT ["/bin/entrypoint", "2016-9831"]
+CMD ["45m", "1h", "10"]
+
+FROM builder as entrypoint-2017-9988
+
+ENTRYPOINT ["/bin/entrypoint", "2017-9988"]
 CMD ["45m", "1h", "10"]
