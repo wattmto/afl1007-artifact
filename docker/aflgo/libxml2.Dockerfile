@@ -1,7 +1,8 @@
 ARG TAG=main
 ARG CVE=2017-5969
 ARG PREFIX
-FROM ${PREFIX}afl1007-artifact/aflgo:${TAG} as builder
+ARG SAN
+FROM ${PREFIX}afl1007-artifact/aflgo:${TAG} AS distance-builder
 
 ARG CVE
 
@@ -46,29 +47,47 @@ RUN grep -v "^$" /inst-assist/BBnames.txt | rev | cut -d: -f2- | rev | sort | un
 
 RUN /aflgo/distance/gen_distance_fast.py /libxml2 /inst-assist xmllint
 
+FROM distance-builder as builder
+
+WORKDIR /libxml2
+
 RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXX=/aflgo/instrument/aflgo-clang++ && \
-    export CFLAGS="-distance=/inst-assist/distance.cfg.txt -DFORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=undefined,address -fno-omit-frame-pointer -g -Wno-error" && \
-    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt -DFORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=undefined,address -fno-omit-frame-pointer -g -Wno-error" && \
+    export CFLAGS="-distance=/inst-assist/distance.cfg.txt -fsanitize=address -fno-omit-frame-pointer" && \
+    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt -fsanitize=address -fno-omit-frame-pointer" && \
     make clean && \
     ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
     make -j "$(nproc)" xmllint
+
+FROM distance-builder as builder-nosan
+
+WORKDIR /libxml2
+
+RUN export CC=/aflgo/instrument/aflgo-clang && \
+    export CXX=/aflgo/instrument/aflgo-clang++ && \
+    export CFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
+    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
+    make clean && \
+    ./configure --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-modules --without-python && \
+    make -j "$(nproc)" xmllint
+
+FROM builder${SAN} as builder
 
 WORKDIR /
 
 FROM builder as entrypoint-2017-5969
 
-ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--recover --nonet --nowarning @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-5969"]
 CMD ["45m", "1h", "10"]
 
 FROM builder as entrypoint-2017-9047
 
-ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid --nonet --nowarning @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-9047"]
 CMD ["45m", "1h", "10"]
 
 FROM builder as entrypoint-2017-9048
 
-ENTRYPOINT ["/bin/entrypoint", "/libxml2/xmllint", "--valid --nonet --nowarning @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-9048"]
 CMD ["45m", "1h", "10"]
 
 # hadolint ignore=DL3006

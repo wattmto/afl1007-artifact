@@ -3,8 +3,14 @@
 set -euxo pipefail
 
 #
-# entrypoint <binary> <args> <mintime> <maxtime> <timeout>
+# entrypoint <cve> <mintime> <maxtime> <timeout>
 #
+
+CVE=$1
+MINTIME=$2
+MAXTIME=$3
+TIMEOUT=$4
+CMD_TEMPLATE="$(cat cve.json | jq -er --arg cve ${CVE} '.[] | select(.cve == $cve) | .command')"
 
 if [ ! -d "/in" ]; then
     echo "Input directory not found!"
@@ -18,6 +24,6 @@ fi
 
 cp -r /in /tmp/in
 
-timeout $4 /aflgo/afl-2.57b/afl-fuzz -i /tmp/in -o /tmp/out -m none -z exp -c $3 -t $5 -- $1 $2 || true
+timeout "${MAXTIME}" /aflgo/afl-2.57b/afl-fuzz -i /tmp/in -o /tmp/out -m none -z exp -c "${MINTIME}" -t "${TIMEOUT}" -- ${CMD_TEMPLATE} || true
 
 /bin/postprocess

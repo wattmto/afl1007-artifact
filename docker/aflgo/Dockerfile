@@ -98,6 +98,7 @@ WORKDIR /
 
 COPY docker/aflgo/entrypoint /bin/entrypoint
 COPY docker/aflgo/postprocess /bin/postprocess
+COPY cve.json /cve.json
 
 RUN chmod +x /bin/entrypoint && \
     chmod +x /bin/postprocess

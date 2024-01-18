@@ -1,6 +1,7 @@
 ARG TAG=main
 ARG CVE=2017-8392
 ARG PREFIX
+ARG SAN
 
 FROM alpine:3 AS input-downloader
 
@@ -149,49 +150,64 @@ FROM preinst-runner-${CVE} AS builder
 
 RUN export CC=/aflgo/instrument/aflgo-clang && \
     export CXX=/aflgo/instrument/aflgo-clang++ && \
-    export CFLAGS="-distance=/inst-assist/distance.cfg.txt -DFORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=undefined,address -fno-omit-frame-pointer -g -Wno-error" && \
-    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt -DFORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=undefined,address -fno-omit-frame-pointer -g -Wno-error" && \
+    export CFLAGS="-distance=/inst-assist/distance.cfg.txt -fsanitize=address -fno-omit-frame-pointer" && \
+    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt -fsanitize=address -fno-omit-frame-pointer" && \
     make distclean && \
     ./configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld && \
     # ignore LeakSanitizer error
     make -j "$(nproc)" || true && \
     make -j "$(nproc)"
 
+# hadolint ignore=DL3006
+FROM preinst-runner-${CVE} AS builder-nosan
+
+RUN export CC=/aflgo/instrument/aflgo-clang && \
+    export CXX=/aflgo/instrument/aflgo-clang++ && \
+    export CFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
+    export CXXFLAGS="-distance=/inst-assist/distance.cfg.txt" && \
+    make distclean && \
+    ./configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld && \
+    # ignore LeakSanitizer error
+    make -j "$(nproc)" || true && \
+    make -j "$(nproc)"
+
+FROM builder${SAN} as builder
+
 WORKDIR /
 
 FROM builder AS entrypoint-2017-8392
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-SD @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8392"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8393
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objcopy", "--compress-debug-sections @@ out"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8393"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8394
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objcopy", "-Gs @@ out"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8394"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8395
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objcopy", "--compress-debug-sections @@ out"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8395"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8396
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-W @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8396"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8397
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-W @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8397"]
 CMD ["45m", "1h", "1000"]
 
 FROM builder AS entrypoint-2017-8398
 
-ENTRYPOINT ["/bin/entrypoint", "/binutils/binutils/objdump", "-W @@"]
+ENTRYPOINT ["/bin/entrypoint", "2017-8398"]
 CMD ["45m", "1h", "1000"]
 
 # hadolint ignore=DL3006

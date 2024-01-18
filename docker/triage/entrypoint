@@ -1,0 +1,547 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+CVE=$1
+GDBOUT=""
+RESULT=""
+FUNCTION=""
+LINE=""
+
+STACK_PREFIX="^#[\d ]*0x[0-9a-f]{16}"
+
+CMD_TEMPLATE="$(cat cve.json | jq -er --arg cve ${CVE} '.[] | select(.cve == $cve) | .command')"
+
+if [ ! -d "/out" ]; then
+  echo "Output directory not found!"
+  exit 1
+fi
+
+echo "" > /out/results
+
+for input in /out/crashes/* ; do
+  if [ -f "${input}" ] && [ "${input}" != "/out/crashes/README.txt" ]; then
+    CMD=${CMD_TEMPLATE//@@/$input}
+    GDBOUT=$(gdb -quiet -iex 'set pagination off' -iex 'set detach-on-fork off' -iex 'set breakpoint pending on' -x /triage.gdb --args $CMD)
+
+    case "${CVE}" in
+      "2017-5969")
+        case "${GDBOUT}" in
+          *"Program received signal"*)
+            RESULT=$(echo "${GDBOUT}" | grep -o "Program received signal [^.]*.")
+            FUNCTION=$(echo "${GDBOUT}" | grep -oP "${STACK_PREFIX}.* in [^ ]*" | awk '{print $2}' | head -n 1)
+            LINE=$(echo "${GDBOUT}" | grep -oP "${STACK_PREFIX}.* at [^ ]*" | awk '{print $2}' | head -n 1)
+            echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+            continue
+            ;;
+          *)
+            echo "Unknown error!"
+            exit 1
+        esac
+        ;;
+
+      "2017-8392" | "2017-8393" | "2017-8394" | "2017-8395" | "2017-8396" | "2017-8397" | "2017-8398")
+        case "${GDBOUT}" in
+          *"Program received signal"*)
+            RESULT=$(echo "${GDBOUT}" | grep -o "Program received signal [^.]*.")
+
+            case "${GDBOUT}" in
+              *"compress.c:561"*) # 2017-8395
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*compress.c:561$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*compress.c:561$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"objcopy.c:1482"*) # 2017-8394
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*objcopy.c:1482$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*objcopy.c:1482$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *)
+                echo "Unknown error!"
+                exit 1
+            esac
+            ;;
+
+          *"__asan::ReportGenericError"*)
+            RESULT="ASAN"
+            case "${GDBOUT}" in
+              *"i386-dis.c:15486"*) # 2017-9755
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*i386-dis.c:15486$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*i386-dis.c:15486$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"dwarf.c:484"*) # 1027-8398
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*dwarf.c:484$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*dwarf.c:484$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"dwarf2.c:4291"*) # 2017-8392
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*dwarf2.c:4291$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*dwarf2.c:4291$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"dwarf2.c:4333"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*dwarf2.c:4333$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*dwarf2.c:4333$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"elf.c:1160"*) # 2017-8393
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*elf.c:1160$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*elf.c:1160$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"peigen.c:1120"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*peigen.c:1120$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*peigen.c:1120$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,$FUNCTION,${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"peigen.c:1121"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*peigen.c:1121$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*peigen.c:1121$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,$FUNCTION,${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"peigen.c:1123"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*peigen.c:1123$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*peigen.c:1123$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,$FUNCTION,${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"peigen.c:1125"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*peigen.c:1125$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*peigen.c:1125$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,$FUNCTION,${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"peigen.c:1126"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*peigen.c:1126$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*peigen.c:1126$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,$FUNCTION,${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"peigen.c:1127"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*peigen.c:1127$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*peigen.c:1127$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,$FUNCTION,${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"reloc.c:885"*) # 2017-8397
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*reloc.c:885$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*reloc.c:885$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"reloc.c:930"*) # 2017-8396
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*reloc.c:930$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*reloc.c:930$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"section.c:1395"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*section.c:1395$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*section.c:1395$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *)
+                echo "Unknown error!"
+                exit 1
+            esac
+            ;;
+
+          *"__asan::ReportAllocationSizeTooBig"*)
+          RESULT="ASAN AllocationSizeTooBig"
+            case "${GDBOUT}" in
+              *"elf.c:1160"*) # 2017-8393
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*elf.c:1160$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*elf.c:1160$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"compress.c:248"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*compress.c:248$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*compress.c:248$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,$FUNCTION,${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *)
+                echo "Unknown error!"
+                exit 1
+            esac
+            ;;
+
+          *"__asan::ReportOutOfMemory"*)
+            RESULT="ASAN OutOfMemory"
+            case "${GDBOUT}" in
+              *"elf.c:301"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*elf.c:301$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*elf.c:301$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,$FUNCTION,${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"elf.c:1160"*) # 2017-8393
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*elf.c:1160$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*elf.c:1160$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"reloc.c:8050"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*reloc.c:8050$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}"  | grep -P "${STACK_PREFIX}.*reloc.c:8050$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,$FUNCTION,${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *)
+                echo "Unknown error!"
+                exit 1
+            esac
+            ;;
+
+          *)
+            echo "Unknown error!"
+            exit 1
+        esac
+        ;;
+
+      "2016-9827" | "2016-9829")
+        case "${GDBOUT}" in
+          *"Program received signal"*) # 2018-6315
+            RESULT=$(echo "${GDBOUT}" | grep -o "Program received signal [^.]*.")
+
+            case "${GDBOUT}" in
+              *"decompile.c:868"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:868$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:868$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"decompile.c:1344"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:1344$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:1344$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"decompile.c:2369"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:2369$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:2369$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"outputscript.c:1373"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1373$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1373$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"outputscript.c:1687"*) # 2016-9827
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1687$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1687$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:1656"*) #2016-9829
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1656$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1656$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *)
+                #echo "Unknown error!"
+                #exit 1
+
+                echo "\"${input}\",\"${RESULT}\",SKIP,SKIP" >> /out/results
+                continue
+            esac
+            ;;
+
+          *"__asan::ReportGenericError"*)
+            RESULT="ASAN"
+
+            case "${GDBOUT}" in
+              *"decompile.c:104"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:104$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:104$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",\"${FUNCTION}\",${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"decompile.c:868"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:868$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:868$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",\"${FUNCTION}\",${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"decompile.c:2369"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:2369$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:2369$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",\"${FUNCTION}\",${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"decompile.c:2864"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:2864$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*decompile.c:2864$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",\"${FUNCTION}\",${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"outputscript.c:1687"*) # 2016-9827
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1687$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1687$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:67"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:67$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:67$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:68"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:68$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:68$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",$FUNCTION,${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:69"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:69$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:69$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:1656"*) #2016-9829
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1656$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1656$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *)
+                #echo "Unknown error!"
+                #exit 1
+
+                echo "\"${input}\",\"${RESULT}\",SKIP,SKIP" >> /out/results
+                continue
+            esac
+            ;;
+
+          *"__asan::ReportOutOfMemory"*)
+            RESULT="ASAN OutOfMemory"
+
+            case "${GDBOUT}" in
+              *"parser.c:1656"*) #2016-9829
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1656$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1656$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"outputscript.c:1687"*) # 2016-9827
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1687$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1687$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:3061"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3061$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3061$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE},1" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:3066"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3066$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3066$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE},2" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:3071"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3071$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3071$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:3077"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3077$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3077$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:3381"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3381$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3381$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:3388"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3388$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3388$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *)
+                #echo "Unknown error!"
+                #exit 1
+
+                echo "\"${input}\",\"${RESULT}\",SKIP,SKIP" >> /out/results
+                continue
+
+            esac
+            ;;
+
+          *"__asan::ReportAllocationSizeTooBig"*)
+            RESULT="ASAN AllocationSizeTooBig"
+
+            case "${GDBOUT}" in
+              *"outputscript.c:1687"*) # 2016-9827
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1687$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*outputscript.c:1687$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:1451"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1451$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1451$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:1463"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1463$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1463$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:1656"*) #2016-9829
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1656$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1656$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:1948"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1948$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1948$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:1978"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1978$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:1978$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:2062"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:2062$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:2062$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:2080"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:2080$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:2080$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:2447"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:2447$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:2447$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:2980"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:2980$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:2980$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:3356"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3356$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3356$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",$RESULT,${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *"parser.c:3409"*)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3409$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:3409$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
+                continue
+                ;;
+
+              *)
+                #echo "Unknown error!"
+                #exit 1
+
+                echo "\"${input}\",\"${RESULT}\",SKIP,SKIP" >> /out/results
+                continue
+
+            esac
+            ;;
+
+          *)
+            echo "Unknown error!"
+            exit 1
+        esac
+        ;;
+
+      *)
+        echo "Unknown error!"
+        exit 1
+    esac
+  fi
+done

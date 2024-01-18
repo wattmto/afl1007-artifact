@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euxo pipefail
+
+#
+# run-triage -f <fuzzer> -c <cve> -i <id>
+#
+
+date=''
+fuzzer=''
+cve=''
+ID=''
+
+while getopts 'c:f:i:d:' flag
+do
+  case "${flag}" in
+    c)
+      cve="${OPTARG}"
+      ;;
+    f)
+      fuzzer="${OPTARG}"
+      ;;
+    i)
+      ID="-${OPTARG}"
+      ;;
+    d)
+      date="${OPTARG}"
+      ;;
+    *)
+      error "Unexpected option ${flag}"
+      ;;
+  esac
+done
+
+project="$(cat cve.json | jq -er --arg cve ${cve} '.[] | select(.cve == $cve) | .project')"
+
+if [ ! -d "$(pwd)/experiment/${project}/out/${cve}-${fuzzer}-${date}${ID}" ]; then
+  echo "Output directory not found!"
+  exit 1
+fi
+
+docker run --name "triage-${cve}-${fuzzer}-${date}${ID}" -d -it --network none --security-opt seccomp=unconfined -v "$(pwd)/experiment/${project}/out/${cve}-${fuzzer}-${date}${ID}:/out" "afl1007-artifact/triage/${cve}:$(date -I)"

@@ -1,52 +1,74 @@
 [
   {
+    "cve": "2016-9827",
+    "project": "libming",
+    "timeout": 5,
+    "command": "/libming/util/swftophp @@"
+  },
+  {
+    "cve": "2016-9829",
+    "project": "libming",
+    "timeout": 5,
+    "command": "/libming/util/swftophp @@"
+  },
+  {
     "cve": "2017-5969",
     "project": "libxml2",
-    "timeout": 10
+    "timeout": 10,
+    "command": "/libxml2/xmllint --recover --nonet --nowarning @@"
   },
   {
     "cve": "2017-8392",
     "project": "binutils",
-    "timeout": 40
+    "timeout": 40,
+    "command": "/binutils/binutils/objdump -SD @@"
   },
   {
     "cve": "2017-8393",
     "project": "binutils",
-    "timeout": 5
+    "timeout": 5,
+    "command": "/binutils/binutils/objcopy --compress-debug-sections @@ out"
   },
   {
     "cve": "2017-8394",
     "project": "binutils",
-    "timeout": 5
+    "timeout": 5,
+    "command": "/binutils/binutils/objcopy -Gs @@ out"
   },
   {
     "cve": "2017-8395",
     "project": "binutils",
-    "timeout": 10
+    "timeout": 10,
+    "command": "/binutils/binutils/objcopy --compress-debug-sections @@ out"
   },
   {
     "cve": "2017-8396",
     "project": "binutils",
-    "timeout": 5
+    "timeout": 5,
+    "command": "/binutils/binutils/objdump -W @@"
   },
   {
     "cve": "2017-8397",
     "project": "binutils",
-    "timeout": 5
+    "timeout": 5,
+    "command": "/binutils/binutils/objdump -W @@"
   },
   {
     "cve": "2017-8398",
     "project": "binutils",
-    "timeout": 5
+    "timeout": 5,
+    "command": "/binutils/binutils/objdump -W @@"
   },
   {
     "cve": "2017-9047",
     "project": "libxml2",
-    "timeout": 10
+    "timeout": 10,
+    "command": "/libxml2/xmllint --valid --nonet --nowarning @@"
   },
   {
     "cve": "2017-9048",
     "project": "libxml2",
-    "timeout": 10
+    "timeout": 10,
+    "command": "/libxml2/xmllint --valid --nonet --nowarning @@"
   }
 ]
