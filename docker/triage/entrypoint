@@ -364,8 +364,8 @@ for input in /out/crashes/* ; do
                 ;;
 
               *"parser.c:66"*) # 2016-9831
-                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:67$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
-                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:67$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:66$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:66$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
                 echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
                 continue
                 ;;
@@ -419,8 +419,8 @@ for input in /out/crashes/* ; do
 
             case "${GDBOUT}" in
               *"parser.c:66"*) # 2016-9831
-                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:67$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
-                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:67$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:66$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:66$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
                 echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
                 continue
                 ;;
@@ -530,8 +530,8 @@ for input in /out/crashes/* ; do
                 ;;
 
               *"parser.c:66"*) # 2016-9831
-                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:67$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
-                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:67$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
+                FUNCTION=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:66$" | grep -o "in [^ ]*" | awk '{print $2}' | head -n 1)
+                LINE=$(echo "${GDBOUT}" | grep -P "${STACK_PREFIX}.*parser.c:66$" | grep -o "at [^ ]*" | awk '{print $2}' | head -n 1)
                 echo "\"${input}\",\"${RESULT}\",${FUNCTION},${LINE}" >> /out/results
                 continue
                 ;;
