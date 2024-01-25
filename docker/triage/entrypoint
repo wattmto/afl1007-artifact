@@ -232,7 +232,7 @@ for input in /out/crashes/* ; do
         esac
         ;;
 
-      "2016-9827" | "2016-9829")
+      "2016-9827" | "2016-9829" | "2016-9831" | "2017-9988" )
         case "${GDBOUT}" in
           *"Program received signal"*) # 2018-6315
             RESULT=$(echo "${GDBOUT}" | grep -o "Program received signal [^.]*.")
