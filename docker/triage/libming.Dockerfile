@@ -38,5 +38,13 @@ FROM builder as entrypoint-2016-9829
 
 ENTRYPOINT ["/bin/entrypoint", "2016-9829"]
 
+FROM builder as entrypoint-2016-9831
+
+ENTRYPOINT ["/bin/entrypoint", "2016-9831"]
+
+FROM builder as entrypoint-2017-9988
+
+ENTRYPOINT ["/bin/entrypoint", "2017-9988"]
+
 # hadolint ignore=DL3006
 FROM entrypoint-${CVE}
